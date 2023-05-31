@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: chan-service
+  profiles:
+    active: dev
+  cloud: #nacos地址 这里将会从nacos远程拉取配置信息
+    nacos:
+      server-addr: nacos-server:8848
+      config:
+        file-extension: yaml
+# 拉取的配置文件的dataID = chan-service-dev.yaml
+  # rocketMQ的配置
+    stream:
+      rocketmq:
+        binder:
+          name-server: rocket-server:9876
+      bindings:
+        tio_group: {destination: tio_group, content-type: application/plain, group: order-group, consumer.maxAttempts: 1}
+
+# tio的配置文件
+tio:
+  websocket:
+    server:
+      port: 8326 # 监听的websocket端口
+      heartbeat-timeout: 600000  # 心跳时间
+#    cluster: # 开启集群
+#      enabled: true
+#      redis: # 集群基于Redis Pus/Sub
+#        ip: redis-server
+#        port: 6379
+#        password: 123456

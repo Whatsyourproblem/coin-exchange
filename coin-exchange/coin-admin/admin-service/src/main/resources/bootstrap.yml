@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: admin-service
+  profiles:
+    active: dev
+  cloud: #nacos地址 这里将会从nacos远程拉取配置信息
+    nacos:
+      server-addr: nacos-server:8848
+      config:
+        file-extension: yaml
+# 拉取的配置文件的dataID = admin-service-dev.yaml

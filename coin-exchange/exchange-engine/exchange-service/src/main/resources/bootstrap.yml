@@ -1,0 +1,23 @@
+spring:
+  application:
+    # exchange交易模块
+    name: exchange-service
+  profiles:
+    active: dev
+  cloud: #nacos地址 这里将会从nacos远程拉取配置信息
+    nacos:
+      server-addr: nacos-server:8848
+      config:
+        file-extension: yaml
+    #rocketMQ配置
+    stream:
+      rocketmq:
+        binder:
+          name-server: rocketmq-server:9876
+        binders:
+          order_out: {consumer.orderly: true}
+      bindings:
+        order_out: {destination: order_in, content-type: application/plain}
+        cancel_order_in: {destination: cancel_order_out, content-type: application/plain, group: order-group, consumer.maxAttempts: 1}
+        exchange_trade_in: {destination: exchange_trades_out, content-type: application/plain, group: order-group, consumer.maxAttempts: 1}
+# 拉取的配置文件的dataID = exchange-service-dev.yaml

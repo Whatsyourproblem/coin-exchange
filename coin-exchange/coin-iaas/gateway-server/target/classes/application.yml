@@ -1,0 +1,92 @@
+server:
+  port: 80
+spring:
+  application:
+    name: gateway-server
+  # 配置SpringCloudAlibaba
+  cloud:
+    nacos:
+      discovery:
+        # 修改本机的hosts文件即可
+        server-addr: nacos-server:8848
+    #网关配置
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          # 开启小驼峰规则
+          # /admin-service/** ->微服务(ADMIN-SERVICE)
+          lower-case-service-id: true
+      # 自定义路由规则
+      routes:
+          # 后台管理服务的网关
+        - id: admin-service-router
+          # 转发到哪个目的地
+          uri: lb://admin-service
+          # 断言，如果路径是下面格式的话，就转发到上面的服务uri
+          predicates:
+            - Path=/admin/**
+          filters:
+            - StripPrefix=1 # 当前访问/admin/login -> login将admin自动的去掉
+        # 会员服务的网关
+        - id: member-service-router
+          # 转发到哪个目的地
+          uri: lb://member-service
+          # 断言，如果路径是下面格式的话，就转发到上面的服务uri
+          predicates:
+            - Path=/user/**
+          filters:
+            - StripPrefix=1 # 当前访问/user/login -> login将user自动的去掉
+        # 财务系统的网关
+        - id: finance-service-router
+          # 转发到哪个目的地
+          uri: lb://finance-service
+          # 断言，如果路径是下面格式的话，就转发到上面的服务uri
+          predicates:
+            - Path=/finance/**
+          filters:
+            - StripPrefix=1 # 当前访问/finance/login -> login将finance自动的去掉
+        # 交易系统的网关
+        - id: exchange-service-router # 交易系统的路由
+          # 转发到哪个目的地
+          uri: lb://exchange-service
+          # 断言，如果路径是下面格式的话，就转发到上面的服务uri
+          predicates:
+            - Path=/exchange/**
+          filters:
+            - StripPrefix=1 # 当前访问/exchange/login -> login将exchange自动的去掉
+        - id: test-router
+          uri: http://www.aliyun.com
+          predicates:
+            # /test -> http://www.baidu.com 网关自己内部会构建请求去访问我们要访问的地址
+            # GET:http://www.baidu.com/test
+            - Path=/product
+
+    # 通过网关来完成对2种维度的限流： 网关维度+API分组
+    sentinel:
+      transport:
+        dashboard: sentinel-server:8858
+        # 客户端ip和端口
+        client-ip: 192.168.31.183
+        port: 8719
+      datasource:
+#        ds1.file:
+#          file: classpath:gw-flow.json #网关 + API分组的限流
+#          ruleType: gw_flow
+        ds1.nacos:
+          serverAddr: nacos-server:8848
+          dataId: gw-flow
+          ruleType: gw_flow
+#        ds2.file:
+#          file: classpath:api-group.json
+#          ruleType: gw_api_group
+        ds2.nacos:
+          serverAddr: nacos-server:8848
+          dataId: api-group
+          ruleType: gw_api_group
+      eager: true
+  redis:
+    host: redis-server
+    port: 6379
+    password: 123456
+# 我们演示了sentinel-dashboard 的规则的定义，而且规则定义好了后，我们的网关立马能感知到（nacos感知不到），但是我们下次重启，会丢失规则。
